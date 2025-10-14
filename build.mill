@@ -21,6 +21,7 @@ object Fengyin extends ScalaModule with ScalafmtModule{ m =>
   def chiselVersion = "7.0.0"
   override def scalacOptions = Seq(
     "-language:reflectiveCalls",
+    "-language:implicitConversions",
     "-deprecation",
     "-feature",
     "-Xcheckinit",
