@@ -1,8 +1,8 @@
 #include "error_inject.h"
 #include "mesh.h"
 #include "mesh_utils.h"
+#include "Log.h"
 #include <chrono>
-#include <print>
 #include <random>
 #include <string>
 
@@ -20,11 +20,14 @@ struct ScopedTimer {
     auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
             .count();
-    std::println("[{}] 运行时间:  {}  ms", name, duration);
+    LOG_INFO("[{}] 运行时间:  {}  ms", name, duration);
   }
 };
 
 int main() {
+
+  Log::Init();
+  LOG_INFO("程序开始运行");
 
   ScopedTimer timer("generate_mesh_graph_manual");
   std::vector<Graph> graphs = generate_mesh_graph_manual_batch(50000, 4);
@@ -32,21 +35,17 @@ int main() {
 
   std::ranges::sort(graphs, {}, count_mesh_score);
 
-  // std::ranges::for_each(graphs | std::views::take(100), [](const Graph &g) {
-  //   std::println("score: {}", count_mesh_score(g));
-  //   print_mesh_graph(g);
-  //   std::println("");
-  // });
   int count = 0;
-  std::ranges::for_each(graphs, [&count](Graph &g) {
-    // if (!is_graph_full(g)) {
-    //   std::println("score: {}", count_mesh_score(g));
-    //   std::println("count: {}", count++);
-    //   print_mesh_graph(g);
-    //   std::println("");
-    // }
-    delete_isolated_nodes(g);
-  });
+  std::ranges::for_each(graphs,
+                        [&count](Graph &g) { delete_isolated_nodes(g); });
+
+  auto sub_graphs = graphs | std::views::filter(has_subgraphs);
+  auto incomplete_graphs =
+      graphs | std::views::filter([](Graph &g) { return !is_graph_full(g); });
+
+  std::println("sub_graphs count: {}", std::ranges::distance(sub_graphs));
+  std::println("incomplete_graphs count: {}",
+               std::ranges::distance(incomplete_graphs));
 
   return 0;
 }

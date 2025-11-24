@@ -2,19 +2,24 @@ add_rules("mode.debug", "mode.release")
 add_rules("plugin.compile_commands.autoupdate")
 
 add_requires("boost",{system = false,configs = {cmake = false}})
+add_requires("spdlog", {system = false})
+
+
 
 set_languages("c++23")
 set_warnings("all")
 set_optimize("fastest")
 
 includes("src/graph")
+includes("src/utils")
 
 target("Fenyin")
     set_kind("binary")
     add_files("src/main.cpp")
-    add_packages("boost")
+    add_packages("boost","spdlog")
 
-    add_deps("graph")
+    add_deps("graph","utils")
+
 --
 -- If you want to known more usage about xmake, please see https://xmake.io
 --

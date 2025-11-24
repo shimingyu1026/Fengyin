@@ -7,3 +7,5 @@
 #include <print>
 #include <random>
 #include <ranges>
+
+#include "Log.h"

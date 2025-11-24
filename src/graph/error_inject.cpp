@@ -89,7 +89,7 @@ void  random_error_inject(std::vector<Graph>& graphs, const float node_error_rat
     }
     else
     {
-      std::println("not found edge: {}", sub_idx);
+      LOG_ERROR("not found edge: {}", sub_idx);
     }
   });
 
