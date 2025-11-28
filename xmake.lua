@@ -1,10 +1,13 @@
 add_rules("mode.debug", "mode.release")
-add_rules("plugin.compile_commands.autoupdate")
+add_rules("plugin.compile_commands.autoupdate", {outputdir = ".vscode"})
+
 
 add_requires("boost",{system = false,configs = {cmake = false}})
 add_requires("spdlog", {system = false})
 
-
+if is_mode("release") and has_config("open lto") then
+    set_policy("build.optimization.lto", true)
+end
 
 set_languages("c++23")
 set_warnings("all")
@@ -19,6 +22,8 @@ target("Fenyin")
     add_packages("boost","spdlog")
 
     add_deps("graph","utils")
+
+
 
 --
 -- If you want to known more usage about xmake, please see https://xmake.io
@@ -87,5 +92,9 @@ target("Fenyin")
 --    add_ldflags("-L/usr/local/lib", "-lpthread", {force = true})
 --
 -- @endcode
---
 
+option("open lto")
+    set_default(false)
+    set_showmenu(true)
+    set_category("build")
+    set_description("Open LTO")

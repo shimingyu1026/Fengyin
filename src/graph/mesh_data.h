@@ -1,29 +1,58 @@
 #pragma once
 
 #include "common.h"
+#include <optional>
 
-// --- 节点结构 ---
-struct Node {
-  int id;
-  std::string name;
-  bool is_deleted;  // 标记节点是否已被删除（保留索引）
 
-  Node(int id, std::string name) : id(id), name(name), is_deleted(false) {}
-
-  Node() : id(-1), name(""), is_deleted(false) {}
+// --- 图的元数据结构 ---
+struct GraphMetadata {
+  std::optional<bool> has_subgraphs; // 是否有子图
+  std::optional<bool> is_full;       // 是否完整
+  std::optional<int> num_components; // 连通分量数量
+  std::optional<int> score;          // 图的分数
 };
 
-// --- 边结构 ---
-struct Edge {
-  int id;
-  std::string name;
-  int source_idx;
-  int target_idx;
+// --- 带元数据的图包装类 ---
+class GraphWithMetadata {
+private:
+  Graph graph_;
+  mutable GraphMetadata metadata_;
+  mutable bool metadata_dirty_ = true; // 全局脏标记
 
-  Edge(int id, std::string name, int source_idx, int target_idx) : id(id), name(name), source_idx(source_idx), target_idx(target_idx) {}
+  // 私有方法：清除所有缓存
+  void invalidate_metadata() const;
 
-  Edge() : id(-1), name(""), source_idx(-1), target_idx(-1) {}
+  // 私有方法：检查并清除脏标记（当所有属性都已计算时）
+  void check_and_clear_dirty() const;
+
+  // 私有方法：惰性计算各个属性
+  void ensure_has_subgraphs() const;
+  void ensure_is_full() const;
+  void ensure_num_components() const;
+  void ensure_score() const;
+
+public:
+  // 构造和移动
+  GraphWithMetadata() = default;
+  explicit GraphWithMetadata(Graph g) : graph_(std::move(g)) {}
+
+  // 访问原始图（只读）
+  const Graph &graph() const { return graph_; }
+
+  // 访问原始图（可修改，修改后需要标记为脏）
+  Graph &graph_mut() {
+    invalidate_metadata();
+    return graph_;
+  }
+
+  // 获取元数据（惰性计算）
+  bool has_subgraphs() const;
+  bool is_full() const;
+  int num_components() const;
+  int score() const;
+
+  // 修改接口（自动更新脏标记）
+  void delete_node(int node_idx);
+  void delete_edge(int source_idx, int target_idx);
+  void delete_isolated_nodes();
 };
-
-
-
