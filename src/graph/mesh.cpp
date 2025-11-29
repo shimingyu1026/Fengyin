@@ -1,4 +1,4 @@
-#include "mesh_data.h"
+
 #include "common.h"
 #include "mesh.h"
 #include <ranges>
@@ -9,7 +9,7 @@
 #include <vector>
 
 
-Graph generate_mesh_graph_manual(const int N) {
+GraphWithMetadata generate_mesh_graph_manual(const int N) {
   Graph g(N * N);
   
   // 生成节点索引，并设置节点名称
@@ -53,11 +53,11 @@ Graph generate_mesh_graph_manual(const int N) {
       g[egde_pair.first] = Edge(idx + N * (N - 1), name, top_node_idx, bottom_node_idx);//顺延边的序号
     }
   });
-  return g;
+  return GraphWithMetadata(g);
 }
 
 
-std::vector<Graph> generate_mesh_graph_manual_batch(const int N, const int batch_size) {
+std::vector<GraphWithMetadata> generate_mesh_graph_manual_batch(const int N, const int batch_size) {
   auto graph_indices = std::views::iota(0, N);
   
   return graph_indices 

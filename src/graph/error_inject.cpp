@@ -46,13 +46,13 @@ void edge_error_inject(Graph& g, const int source_idx, const int target_idx) {
   }
 }
 
-void  random_error_inject(std::vector<Graph>& graphs, const float node_error_rate, const float edge_error_rate,std::mt19937& rng) {
+void  random_error_inject(std::vector<GraphWithMetadata>& graphs, const float node_error_rate, const float edge_error_rate,std::mt19937& rng) {
 
   // 获取网格大小
   int num_graphs = graphs.size(); // 图的数量
 
-  int num_nodes = boost::num_vertices(graphs[0]);
-  int num_edges = boost::num_edges(graphs[0]);
+  int num_nodes = boost::num_vertices(graphs[0].graph());
+  int num_edges = boost::num_edges(graphs[0].graph());
 
   [[maybe_unused]]int mesh_size = std::sqrt(num_nodes); // 拓扑大小 n * n 
 
@@ -76,7 +76,7 @@ void  random_error_inject(std::vector<Graph>& graphs, const float node_error_rat
     int chip_idx = idx / num_edges;
 
     // 获取图中的所有边，找到指定的idx的边，并删除它
-    auto& g = graphs[chip_idx];
+    auto& g = graphs[chip_idx].graph();
     auto edges = boost::edges(g);
 
     auto found = std::ranges::find_if(std::ranges::subrange(edges.first, edges.second),[&g,sub_idx](auto edge){
@@ -85,7 +85,8 @@ void  random_error_inject(std::vector<Graph>& graphs, const float node_error_rat
 
     if (found != edges.second) {
       auto edge = *found;
-      edge_error_inject(g, g[edge].source_idx, g[edge].target_idx);
+      // edge_error_inject(g, g[edge].source_idx, g[edge].target_idx);
+      graphs[chip_idx].delete_edge(g[edge].source_idx, g[edge].target_idx);
     }
     else
     {
@@ -103,6 +104,7 @@ void  random_error_inject(std::vector<Graph>& graphs, const float node_error_rat
 
     int chip_idx = idx / num_nodes;
 
-    node_error_inject(graphs[chip_idx], sub_idx);
+    // node_error_inject(graphs[chip_idx].graph_mut(), sub_idx);
+    graphs[chip_idx].delete_node(sub_idx);
   });
 }

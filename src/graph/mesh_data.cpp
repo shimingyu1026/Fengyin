@@ -22,7 +22,7 @@ void GraphWithMetadata::check_and_clear_dirty() const {
 
 // 惰性计算：是否有子图
 void GraphWithMetadata::ensure_has_subgraphs() const {
-  if (metadata_.has_subgraphs.has_value() && !metadata_dirty_) {
+  if (metadata_.has_subgraphs.has_value()) {
     return;
   }
 
@@ -89,7 +89,7 @@ void GraphWithMetadata::ensure_has_subgraphs() const {
 
 // 惰性计算：是否完整
 void GraphWithMetadata::ensure_is_full() const {
-  if (metadata_.is_full.has_value() && !metadata_dirty_) {
+  if (metadata_.is_full.has_value()) {
     return;
   }
 
@@ -108,7 +108,7 @@ void GraphWithMetadata::ensure_is_full() const {
 
 // 惰性计算：连通分量数量
 void GraphWithMetadata::ensure_num_components() const {
-  if (metadata_.num_components.has_value() && !metadata_dirty_) {
+  if (metadata_.num_components.has_value()) {
     return;
   }
 
@@ -174,7 +174,7 @@ void GraphWithMetadata::ensure_num_components() const {
 
 // 惰性计算：图的分数
 void GraphWithMetadata::ensure_score() const {
-  if (metadata_.score.has_value() && !metadata_dirty_) {
+  if (metadata_.score.has_value()) {
     return;
   }
 
