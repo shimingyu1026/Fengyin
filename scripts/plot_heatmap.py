@@ -58,8 +58,8 @@ def plot_heatmap(csv_path: str, output_path: str = None):
     # 绘制 sub_graphs_rate 热力图
     plt.figure(figsize=(12, 8))
     sns.heatmap(pivot_sub, 
-                annot=False,  # 不显示数值，因为数据点较多
-                fmt='.2f',
+                annot=True,  # 不显示数值，因为数据点较多
+                fmt='.1f',
                 cmap='YlOrRd',
                 cbar_kws={'label': 'Sub Graphs Rate (%)'},
                 linewidths=0.5,
@@ -78,8 +78,8 @@ def plot_heatmap(csv_path: str, output_path: str = None):
     # 绘制 incomplete_graphs_rate 热力图
     plt.figure(figsize=(12, 8))
     sns.heatmap(pivot_incomplete, 
-                annot=False,  # 不显示数值，因为数据点较多
-                fmt='.2f',
+                annot=True,  # 不显示数值，因为数据点较多
+                fmt='.1f',
                 cmap='YlGnBu',
                 cbar_kws={'label': 'Incomplete Graphs Rate (%)'},
                 linewidths=0.5,
