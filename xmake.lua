@@ -4,6 +4,7 @@ add_rules("plugin.compile_commands.autoupdate", {outputdir = ".vscode"})
 
 add_requires("boost",{system = false,configs = {cmake = false}})
 add_requires("spdlog", {system = false})
+add_requires("openmp", {system = false})
 
 if is_mode("release") and has_config("open lto") then
     set_policy("build.optimization.lto", true)
@@ -19,8 +20,7 @@ includes("src/utils")
 target("Fenyin")
     set_kind("binary")
     add_files("src/main.cpp")
-    add_packages("boost","spdlog")
-
+    add_packages("boost","spdlog","openmp")
     add_deps("graph","utils")
 
 
