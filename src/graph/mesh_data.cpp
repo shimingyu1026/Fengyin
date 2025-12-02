@@ -187,6 +187,23 @@ void GraphWithMetadata::ensure_score() const {
   check_and_clear_dirty();
 }
 
+void GraphWithMetadata::ensure_is_all_nodes_exist() const {
+  if (metadata_.is_all_nodes_exist.has_value()) {
+    return;
+  }
+
+  int num_vertices = static_cast<int>(boost::num_vertices(graph_));
+  auto ranges = std::views::iota(0, num_vertices);
+  metadata_.is_all_nodes_exist = std::ranges::all_of(ranges, [&](int i) {
+    auto vertex = boost::vertex(i, graph_);
+    return !graph_[vertex].is_deleted;
+  });
+
+  // 检查是否可以清除脏标记
+  check_and_clear_dirty();
+}
+
+//---------------------------------------------------------------
 // 公共接口：获取是否有子图
 bool GraphWithMetadata::has_subgraphs() const {
   ensure_has_subgraphs();
@@ -211,6 +228,38 @@ int GraphWithMetadata::score() const {
   return metadata_.score.value();
 }
 
+// 公共接口：获取是否所有节点都存在
+bool GraphWithMetadata::is_all_nodes_exist() const {
+  ensure_is_all_nodes_exist();
+  return metadata_.is_all_nodes_exist.value();
+}
+
+// 公共接口：获取图的拓扑结构
+std::string GraphWithMetadata::get_graph_topology() const {
+  std::string topology;
+  size_t node_num = graph_size_ * graph_size_;
+
+  for (size_t i = 0; i < node_num; ++i) {
+    auto vertex_i = boost::vertex(i, graph_);
+    if (graph_[vertex_i].is_deleted) {
+      topology += std::format("\t{}\n", i);
+       continue;
+    }
+    for (size_t j = i + 1; j < node_num; ++j) {
+      auto vertex_j = boost::vertex(j, graph_);
+      if (graph_[vertex_j].is_deleted) {
+        continue;
+      }
+      auto [edge, exists] = boost::edge(vertex_i, vertex_j, graph_);
+      if (exists) {
+        topology += std::format("\t{}--{}\n", i, j);
+      }
+    }
+  }
+  return topology;
+}
+
+//---------------------------------------------------------------
 // 修改接口：删除节点
 void GraphWithMetadata::delete_node(int node_idx) {
   // 检查节点索引是否有效

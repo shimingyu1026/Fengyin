@@ -10,12 +10,16 @@ struct GraphMetadata {
   std::optional<bool> is_full;       // 是否完整
   std::optional<int> num_components; // 连通分量数量
   std::optional<int> score;          // 图的分数
+  std::optional<bool> is_all_nodes_exist; // 是否所有节点都存在
 };
 
 // --- 带元数据的图包装类 ---
 class GraphWithMetadata {
 private:
   Graph graph_;
+  size_t graph_size_;
+
+
   mutable GraphMetadata metadata_;
   mutable bool metadata_dirty_ = true; // 全局脏标记
 
@@ -30,11 +34,17 @@ private:
   void ensure_is_full() const;
   void ensure_num_components() const;
   void ensure_score() const;
+  void ensure_is_all_nodes_exist() const;
 
 public:
   // 构造和移动
   GraphWithMetadata() = default;
-  explicit GraphWithMetadata(Graph g) : graph_(std::move(g)) {}
+  explicit GraphWithMetadata(Graph g) : graph_(std::move(g)){
+    graph_size_ = static_cast<size_t>(std::sqrt(boost::num_vertices(g)));
+  }
+
+  //访问原始图
+  size_t graph_size() const { return graph_size_; }
 
   // 访问原始图（只读）
   const Graph &graph() const { return graph_; }
@@ -45,11 +55,15 @@ public:
     return graph_;
   }
 
+  // 输出图的拓扑结构
+  std::string get_graph_topology() const;
+
   // 获取元数据（惰性计算）
   bool has_subgraphs() const;
   bool is_full() const;
   int num_components() const;
   int score() const;
+  bool is_all_nodes_exist() const;
 
   // 修改接口（自动更新脏标记）
   void delete_node(int node_idx);

@@ -16,12 +16,13 @@ set_optimize("fastest")
 
 includes("src/graph")
 includes("src/utils")
+includes("src/traffic")
 
 target("Fenyin")
     set_kind("binary")
     add_files("src/main.cpp")
     add_packages("boost","spdlog","openmp")
-    add_deps("graph","utils")
+    add_deps("graph","utils","traffic")
 
 
 

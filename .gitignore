@@ -15,4 +15,9 @@ perf.data*
 # output
 out/
 
+# python
+__pycache__/
+
+
+*.gv
 

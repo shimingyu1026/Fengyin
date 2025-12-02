@@ -182,3 +182,32 @@ void delete_isolated_nodes(Graph &g) {
     }
   });
 }
+
+void generate_topology(const std::filesystem::path &file_path,
+                       const std::string &name, const int weight,
+                       const int pipeline_stage_delay,
+                       const GraphWithMetadata &g) {
+
+  std::filesystem::path parentDir = file_path.parent_path();
+  if (!std::filesystem::exists(parentDir)) {
+    std::filesystem::create_directories(parentDir); // 递归创建目录
+    LOG_INFO("目录已创建: {}", parentDir.string());
+  }
+
+  // 如果文件存在，先删除（清空）
+  if (std::filesystem::exists(file_path)) {
+    std::filesystem::remove(file_path);
+    LOG_INFO("已删除旧文件: {}", file_path.string());
+  }
+
+  std::ofstream outfile(file_path);
+
+  std::string topology = g.get_graph_topology();
+  std::string ss;
+  ss += std::format("graph: {} {{\n", name);
+  ss += std::format("\tedge[weight={}]\n", weight);
+  ss += std::format("\tnode[pipeline_stage_delay={}]\n", pipeline_stage_delay);
+  ss += topology;
+  ss += std::format("}}\n");
+  std::print(outfile, "{}", ss);
+}
