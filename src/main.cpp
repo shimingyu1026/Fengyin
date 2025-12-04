@@ -4,6 +4,8 @@
 #include "mesh_data.h"
 #include "mesh_utils.h"
 #include "traffic.h"
+#include "traffic_formatter.h"
+#include "utils.h"
 #include <chrono>
 #include <filesystem>
 #include <fstream>
@@ -24,68 +26,36 @@ int main() {
       generate_mesh_graph_manual_batch(5000, 4);
 
   // 注入节点错误
-  random_error_inject(graphs, 0, 0.05, g_rng);
+  // random_error_inject(graphs, 0.00, 0.05, g_rng);
   // 删除孤立节点
   std::ranges::for_each(
       graphs, [](GraphWithMetadata &g) { g.delete_isolated_nodes(); });
 
   std::ranges::sort(graphs, {}, [](GraphWithMetadata &g) { return g.score(); });
 
-  auto nodes_complete_and_has_no_subgraphs_graphs =
-      graphs | std::views::filter([](GraphWithMetadata &g) {
-        return g.is_all_nodes_exist() && !g.has_subgraphs();
-      });
-  std::println(
-      "nodes complete and has no subgraphs graphs size: {}",
-      std::ranges::distance(nodes_complete_and_has_no_subgraphs_graphs));
+  // 筛选符合条件的图并转换为 vector（避免 view 被消耗的问题）
+  auto selected_graph = graphs | std::views::filter([](GraphWithMetadata &g) {
+                          return g.is_all_nodes_exist() && !g.has_subgraphs();
+                        }) |
+                        std::ranges::to<std::vector>();
 
-  auto nodes_incomplete_graphs =
-      graphs | std::views::filter([](GraphWithMetadata &g) {
-        return !g.is_all_nodes_exist();
-      });
-  std::println("nodes incomplete graphs size: {}",
-               std::ranges::distance(nodes_incomplete_graphs));
+  std::println("selected_graph size: {}", selected_graph.size());
 
-  generate_topology("/home/shimingyu/Proj/Fenyin/aa.gv", "graph_1", 1, 1,
-                    graphs[0]);
-
-  auto [gemm_traffic, size_total] = random_gemm_generate(3, g_rng, "BF16");
-  std::println("gemm_traffic: {} \n size: {}", gemm_traffic,size_total);
-
-  auto [gemmtraffic, sizetotal] = random_gemm_generate(3, g_rng, "BF16");
-  std::println("gemmtraffic: {} \n size: {}", gemmtraffic, sizetotal);
-
-  // std::ranges::sort(graphs, {}, [](GraphWithMetadata &g) { return
-  // g.score(); });
-
-  // auto num_sub_graphs = graphs |
-  //                       std::views::transform([](GraphWithMetadata &g) {
-  //                         return g.num_components();
-  //                       }) |
-  //                       std::ranges::to<std::set>();
-
-  // for (auto num : num_sub_graphs) {
-  //   LOG_INFO("num_sub_graphs: {}", num);
+  // int idx = 0;
+  // for (auto &g : selected_graph) {
+  //   std::string base_path = "/home/shimingyu/Proj/Fenyin/out/graph/";
+  //   std::string file_name = std::format("graph_{}.gv", idx++);
+  //   std::string graph_name = std::format("graph_{}", idx);
+  //   generate_topology(base_path + file_name, graph_name, 1, 1, g);
   // }
 
-  // int count = 0;
-  // std::ranges::for_each(
-  //     graphs, [&count](GraphWithMetadata &g) { g.delete_isolated_nodes();
-  //     });
+  print_mesh_graph(selected_graph[100].graph());
 
-  // auto sub_graphs = graphs | std::views::filter([](GraphWithMetadata &g) {
-  //                     return g.has_subgraphs();
-  //                   });
-  // auto incomplete_graphs =
-  //     graphs |
-  //     std::views::filter([](GraphWithMetadata &g) { return !g.is_full();
-  //     });
+  auto out = random_traffic_generate(g_rng, graphs[4100], 6, "BF16", 3);
 
-  // std::ranges::for_each(sub_graphs, [](GraphWithMetadata &g) {
-  //   print_mesh_graph(g.graph());
-  //   std::println("--------------------------------");
-  // });
-
+  out = matrix_transpose_non_square(out);
+  std::string ss = traffic_gen_to_cpp_code(out);
+  std::println("{}", ss);
   return 0;
 }
 

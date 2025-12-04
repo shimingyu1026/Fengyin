@@ -204,7 +204,7 @@ void generate_topology(const std::filesystem::path &file_path,
 
   std::string topology = g.get_graph_topology();
   std::string ss;
-  ss += std::format("graph: {} {{\n", name);
+  ss += std::format("graph {} {{\n", name);
   ss += std::format("\tedge[weight={}]\n", weight);
   ss += std::format("\tnode[pipeline_stage_delay={}]\n", pipeline_stage_delay);
   ss += topology;
