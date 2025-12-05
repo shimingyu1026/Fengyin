@@ -9,6 +9,7 @@
 #include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <numeric>
 #include <omp.h>
 #include <random>
 #include <string>
@@ -26,20 +27,22 @@ int main() {
       generate_mesh_graph_manual_batch(5000, 4);
 
   // 注入节点错误
-  // random_error_inject(graphs, 0.00, 0.05, g_rng);
+  //   random_error_inject(graphs, 0.01, 0.05, g_rng);
+
+  std::ranges::for_each(graphs,
+                        [](GraphWithMetadata &g) { g.remove_random_edges(2); });
   // 删除孤立节点
   std::ranges::for_each(
       graphs, [](GraphWithMetadata &g) { g.delete_isolated_nodes(); });
 
   std::ranges::sort(graphs, {}, [](GraphWithMetadata &g) { return g.score(); });
 
-  // 筛选符合条件的图并转换为 vector（避免 view 被消耗的问题）
-  auto selected_graph = graphs | std::views::filter([](GraphWithMetadata &g) {
-                          return g.is_all_nodes_exist() && !g.has_subgraphs();
-                        }) |
-                        std::ranges::to<std::vector>();
-
-  std::println("selected_graph size: {}", selected_graph.size());
+  std::ranges::for_each(graphs | std::views::take(10),
+                        [](GraphWithMetadata &g) {
+                          print_mesh_graph(g.graph());
+                          std::println("score: {}", g.score());
+                          std::println("--------------------------------");
+                        });
 
   // int idx = 0;
   // for (auto &g : selected_graph) {
@@ -49,13 +52,11 @@ int main() {
   //   generate_topology(base_path + file_name, graph_name, 1, 1, g);
   // }
 
-  print_mesh_graph(selected_graph[100].graph());
-
-  auto out = random_traffic_generate(g_rng, graphs[4100], 6, "BF16", 3);
+  auto out = random_traffic_generate(g_rng, graphs[4800], 1, "BF16", 32);
 
   out = matrix_transpose_non_square(out);
   std::string ss = traffic_gen_to_cpp_code(out);
-  std::println("{}", ss);
+  // std::println("{}", ss);
   return 0;
 }
 

@@ -22,11 +22,11 @@ const std::unordered_map<std::string, size_t> TYPE_SIZE_MAP = {
     {"INT8", 1}, {"UINT8", 1}, {"INT32", 4}, {"FP64", 8}};
 
 /// ScaleSim 仿真中 GEMM 操作的 M 维度可选值
-const std::vector<int> M_VALUES = {16, 32, 64, 128, 256, 512, 1024};
+const std::vector<int> M_VALUES = {16};
 /// ScaleSim 仿真中 GEMM 操作的 N 维度可选值
-const std::vector<int> N_VALUES = {16, 32, 64, 128, 256, 512, 1024};
+const std::vector<int> N_VALUES = {16};
 /// ScaleSim 仿真中 GEMM 操作的 K 维度可选值
-const std::vector<int> K_VALUES = {16, 32, 64, 128, 256, 512, 1024};
+const std::vector<int> K_VALUES = {16};
 
 /**
  * @brief 流量节点结构体

@@ -243,7 +243,7 @@ std::string GraphWithMetadata::get_graph_topology() const {
     auto vertex_i = boost::vertex(i, graph_);
     if (graph_[vertex_i].is_deleted) {
       topology += std::format("\t{}\n", i);
-       continue;
+      continue;
     }
     for (size_t j = i + 1; j < node_num; ++j) {
       auto vertex_j = boost::vertex(j, graph_);
@@ -332,4 +332,50 @@ void GraphWithMetadata::delete_isolated_nodes() {
   if (modified) {
     invalidate_metadata();
   }
+}
+
+// 修改接口：删除随机边
+void GraphWithMetadata::remove_random_edges(const int edge_num) {
+  if (edge_num <= 0) {
+    return; // 无效参数，直接返回
+  }
+
+  // 创建随机数生成器
+  std::random_device rd;
+  std::mt19937 rng(rd());
+
+  // 收集所有有效的边（连接未删除节点的边）
+  std::vector<std::pair<int, int>> valid_edges;
+  auto [edge_begin, edge_end] = boost::edges(graph_);
+  for (auto it = edge_begin; it != edge_end; ++it) {
+    auto edge = *it;
+    int source_idx = graph_[edge].source_idx;
+    int target_idx = graph_[edge].target_idx;
+
+    // 检查两个节点是否都未删除
+    auto source_vertex = boost::vertex(source_idx, graph_);
+    auto target_vertex = boost::vertex(target_idx, graph_);
+    if (!graph_[source_vertex].is_deleted &&
+        !graph_[target_vertex].is_deleted) {
+      valid_edges.emplace_back(source_idx, target_idx);
+    }
+  }
+
+  // 如果有效边数少于要删除的数量，只删除所有有效边
+  int num_to_remove = std::min(edge_num, static_cast<int>(valid_edges.size()));
+  if (num_to_remove == 0) {
+    return; // 没有有效边可删除
+  }
+
+  // 随机选择要删除的边
+  std::vector<std::pair<int, int>> edges_to_remove;
+  std::ranges::sample(valid_edges, std::back_inserter(edges_to_remove),
+                      num_to_remove, rng);
+
+  // 删除选中的边
+  for (const auto &[source_idx, target_idx] : edges_to_remove) {
+    delete_edge(source_idx, target_idx);
+  }
+
+  // 注意：delete_edge 已经会调用 invalidate_metadata()，所以这里不需要再次调用
 }

@@ -69,4 +69,8 @@ public:
   void delete_node(int node_idx);
   void delete_edge(int source_idx, int target_idx);
   void delete_isolated_nodes();
+
+  void remove_random_edges(const int edge_num);
+
+
 };
