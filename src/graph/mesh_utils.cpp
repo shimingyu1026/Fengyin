@@ -1,5 +1,18 @@
+/**
+ * @file mesh_utils.cpp
+ * @brief 网格图工具函数实现
+ *
+ * 实现网格图的打印、评分、拓扑生成等工具函数
+ */
+
 #include "mesh_utils.h"
 
+/**
+ * @brief 打印网格图
+ * @param g 要打印的图
+ *
+ * 以 ASCII 艺术形式打印网格图的拓扑结构
+ */
 void print_mesh_graph(const Graph &g) {
   int num_vertices = static_cast<int>(boost::num_vertices(g));
   if (num_vertices == 0) {
@@ -106,6 +119,11 @@ int count_mesh_score(const Graph &g) {
   return score;
 }
 
+/**
+ * @brief 检查图是否有子图
+ * @param g 要检查的图
+ * @return 如果存在子图返回 true，否则返回 false
+ */
 bool has_subgraphs(const Graph &g) {
   int num_vertices = static_cast<int>(boost::num_vertices(g));
   if (num_vertices == 0) {
@@ -172,6 +190,12 @@ bool is_graph_full(const Graph &g) {
   return count_mesh_score(g) == full_score;
 }
 
+/**
+ * @brief 删除孤立节点
+ * @param g 要操作的图
+ *
+ * 删除所有度数为0且未被删除的节点
+ */
 void delete_isolated_nodes(Graph &g) {
   boost::graph_traits<Graph>::vertex_iterator vi, vend;
   boost::tie(vi, vend) = boost::vertices(g);
@@ -183,6 +207,16 @@ void delete_isolated_nodes(Graph &g) {
   });
 }
 
+/**
+ * @brief 生成图的拓扑结构文件
+ * @param file_path 输出文件路径
+ * @param name 图名称
+ * @param weight 边权重
+ * @param pipeline_stage_delay 流水线阶段延迟
+ * @param g 要生成拓扑的图
+ *
+ * 将图的拓扑结构写入指定文件，格式为 GraphViz DOT 格式
+ */
 void generate_topology(const std::filesystem::path &file_path,
                        const std::string &name, const int weight,
                        const int pipeline_stage_delay,
@@ -210,4 +244,27 @@ void generate_topology(const std::filesystem::path &file_path,
   ss += topology;
   ss += std::format("}}\n");
   std::print(outfile, "{}", ss);
+}
+
+/**
+ * @brief 批量生成图的拓扑结构文件
+ * @param graphs 图向量
+ * @param base_path 输出文件的基础路径（目录）
+ * @param weight 边权重（默认值为1）
+ * @param pipeline_stage_delay 流水线阶段延迟（默认值为1）
+ *
+ * 为向量中的每个图生成一个拓扑文件，文件名为 graph_0.gv, graph_1.gv, ...
+ */
+void generate_topology_batch(const std::vector<GraphWithMetadata> &graphs,
+                              const std::filesystem::path &base_path,
+                              const int weight,
+                              const int pipeline_stage_delay) {
+  int idx = 0;
+  for (const auto &g : graphs) {
+    std::string file_name = std::format("graph_{}.gv", idx);
+    std::string graph_name = std::format("graph_{}", idx);
+    std::filesystem::path file_path = base_path / file_name;
+    generate_topology(file_path, graph_name, weight, pipeline_stage_delay, g);
+    ++idx;
+  }
 }

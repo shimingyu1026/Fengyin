@@ -1,8 +1,20 @@
+/**
+ * @file Log.cpp
+ * @brief 日志系统实现
+ *
+ * 实现基于 spdlog 的日志系统，支持控制台和文件输出
+ */
+
 #include "Log.h"
 #include <filesystem>
 
 std::shared_ptr<spdlog::logger> Log::s_Logger;
 
+/**
+ * @brief 初始化日志系统
+ *
+ * 创建控制台和文件日志输出，配置日志格式和级别
+ */
 void Log::Init() {
   // 1. 创建控制台 sink (带颜色)
   auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
@@ -42,4 +54,8 @@ void Log::Init() {
   s_Logger->flush_on(spdlog::level::err);
 }
 
+/**
+ * @brief 获取日志记录器实例
+ * @return 日志记录器的引用
+ */
 std::shared_ptr<spdlog::logger> &Log::GetLogger() { return s_Logger; }

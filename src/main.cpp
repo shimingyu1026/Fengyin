@@ -1,3 +1,10 @@
+/**
+ * @file main.cpp
+ * @brief 程序主入口
+ *
+ * 实现网格图生成、错误注入、流量生成等主要功能
+ */
+
 #include "Log.h"
 #include "error_inject.h"
 #include "mesh.h"
@@ -16,47 +23,48 @@
 
 static std::mt19937 g_rng(42);
 
+/**
+ * @brief 程序主函数
+ * @return 程序退出码
+ */
 int main() {
-
+  int leave_edge_count = 5;
   Log::Init();
   LOG_INFO("程序开始运行");
 
   ScopedTimer timer("start the program");
 
   std::vector<GraphWithMetadata> graphs =
-      generate_mesh_graph_manual_batch(5000, 4);
+      generate_mesh_graph_manual_batch(300, 4);
 
   // 注入节点错误
   //   random_error_inject(graphs, 0.01, 0.05, g_rng);
 
-  std::ranges::for_each(graphs,
-                        [](GraphWithMetadata &g) { g.remove_random_edges(2); });
+  std::ranges::for_each(graphs, [&](GraphWithMetadata &g) {
+    g.remove_random_edges(leave_edge_count);
+  });
   // 删除孤立节点
   std::ranges::for_each(
       graphs, [](GraphWithMetadata &g) { g.delete_isolated_nodes(); });
 
-  std::ranges::sort(graphs, {}, [](GraphWithMetadata &g) { return g.score(); });
+  std::ranges::sort(graphs, {}, [](GraphWithMetadata &g) { return g.score() ; });
 
-  std::ranges::for_each(graphs | std::views::take(10),
-                        [](GraphWithMetadata &g) {
-                          print_mesh_graph(g.graph());
-                          std::println("score: {}", g.score());
-                          std::println("--------------------------------");
-                        });
+  auto selected_graph = graphs | std::views::filter([](GraphWithMetadata &g) {
+                          return g.is_all_nodes_exist()  && g.num_components() == 1;
+                        }) |
+                        std::ranges::to<std::vector<GraphWithMetadata>>();
 
-  // int idx = 0;
-  // for (auto &g : selected_graph) {
-  //   std::string base_path = "/home/shimingyu/Proj/Fenyin/out/graph/";
-  //   std::string file_name = std::format("graph_{}.gv", idx++);
-  //   std::string graph_name = std::format("graph_{}", idx);
-  //   generate_topology(base_path + file_name, graph_name, 1, 1, g);
-  // }
+  // 批量生成拓扑文件（可选，取消注释以启用）
+  std::string base_path =
+      "/home/shimingyu/Proj/Fenyin/out/graph/nodes_exist_4_4_edge_" +
+      std::to_string(leave_edge_count) + "/";
+  generate_topology_batch(selected_graph, base_path, 1, 1);
 
-  auto out = random_traffic_generate(g_rng, graphs[4800], 1, "BF16", 32);
+  // auto out = random_traffic_generate(g_rng, graphs[4800], 1, "BF16", 32);
 
-  out = matrix_transpose_non_square(out);
-  std::string ss = traffic_gen_to_cpp_code(out);
-  // std::println("{}", ss);
+  // out = matrix_transpose_non_square(out);
+  // std::string ss = traffic_gen_to_cpp_code(out);
+  // // std::println("{}", ss);
   return 0;
 }
 

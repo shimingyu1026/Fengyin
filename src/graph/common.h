@@ -1,3 +1,10 @@
+/**
+ * @file common.h
+ * @brief 图数据结构通用定义
+ *
+ * 定义节点、边和图的基本数据结构
+ */
+
 #pragma once
 
 #include <algorithm>
@@ -13,7 +20,11 @@
 
 #include "Log.h"
 
-// --- 节点结构 ---
+/**
+ * @brief 节点结构
+ *
+ * 表示图中的节点，包含ID、名称和删除标记
+ */
 struct Node {
   int id;
   std::string name;
@@ -37,6 +48,11 @@ struct Edge {
   Edge() : id(-1), name(""), source_idx(-1), target_idx(-1) {}
 };
 
+/**
+ * @brief 图类型定义
+ *
+ * 使用 Boost Graph Library 定义的无向图，使用向量存储顶点和边
+ */
 using Graph =
     boost::adjacency_list<boost::vecS, // EdgeList：使用 std::vector 存储边
                           boost::vecS, // VertexList：使用 std::vector 存储顶点

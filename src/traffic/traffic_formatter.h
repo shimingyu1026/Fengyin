@@ -1,10 +1,20 @@
+/**
+ * @file traffic_formatter.h
+ * @brief 流量节点格式化器定义
+ *
+ * 为 TrafficNode 提供 std::format 和 std::println 支持
+ */
+
 #pragma once
 
 #include "traffic.h"
 #include <format>
 
-// TrafficNode 的格式化器特化
-// 用于支持 std::format 和 std::println
+/**
+ * @brief TrafficNode 的格式化器特化
+ *
+ * 用于支持 std::format 和 std::println
+ */
 template <> struct std::formatter<TrafficNode> {
   // 解析格式字符串
   // 对于空格式说明符 {}，返回指向 '}' 的迭代器
@@ -23,7 +33,12 @@ template <> struct std::formatter<TrafficNode> {
     return it;
   }
 
-  // 格式化 TrafficNode
+  /**
+   * @brief 格式化 TrafficNode
+   * @param node 要格式化的流量节点
+   * @param ctx 格式上下文
+   * @return 输出迭代器
+   */
   auto format(const TrafficNode &node, std::format_context &ctx) const {
     auto out = ctx.out();
 

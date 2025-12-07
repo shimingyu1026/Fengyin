@@ -1,28 +1,40 @@
+/**
+ * @file mesh.cpp
+ * @brief 网格图生成实现
+ *
+ * 实现网格图的生成和批量生成功能
+ */
 
-#include "common.h"
 #include "mesh.h"
-#include <ranges>
+#include "common.h"
 #include <algorithm>
-#include <numeric>
-#include <string>
 #include <format>
+#include <numeric>
+#include <ranges>
+#include <string>
 #include <vector>
 
-
+/**
+ * @brief 手动生成网格图
+ * @param N 网格大小（N x N）
+ * @return 生成的网格图
+ *
+ * 生成一个 N x N 的网格图，包含所有横向和纵向连接
+ */
 GraphWithMetadata generate_mesh_graph_manual(const int N) {
   Graph g(N * N);
-  
+
   // 生成节点索引，并设置节点名称
   auto indices_nodes = std::views::iota(0, N * N);
-  
+
   std::ranges::for_each(indices_nodes, [&g, N](int idx) {
-    int i = idx / N;  // 行坐标
-    int j = idx % N;  // 列坐标
+    int i = idx / N; // 行坐标
+    int j = idx % N; // 列坐标
     std::string name = std::format("node_({},{})", i, j);
     g[idx] = Node(idx, name);
   });
 
-  //生成横向边，并设置边名称
+  // 生成横向边，并设置边名称
   auto indices_edges_horizontal = std::views::iota(0, N * (N - 1));
   std::ranges::for_each(indices_edges_horizontal, [&g, N](int idx) {
     int row = idx / (N - 1);
@@ -38,7 +50,7 @@ GraphWithMetadata generate_mesh_graph_manual(const int N) {
     }
   });
 
-  //生成纵向边，并设置边名称
+  // 生成纵向边，并设置边名称
   auto indices_edges_vertical = std::views::iota(0, (N - 1) * N);
   std::ranges::for_each(indices_edges_vertical, [&g, N](int idx) {
     int row = idx / N;
@@ -50,26 +62,34 @@ GraphWithMetadata generate_mesh_graph_manual(const int N) {
     auto egde_pair = boost::add_edge(top_node_idx, bottom_node_idx, g);
 
     if (egde_pair.second) {
-      g[egde_pair.first] = Edge(idx + N * (N - 1), name, top_node_idx, bottom_node_idx);//顺延边的序号
+      g[egde_pair.first] = Edge(idx + N * (N - 1), name, top_node_idx,
+                                bottom_node_idx); // 顺延边的序号
     }
   });
   return GraphWithMetadata(g);
 }
 
-
-std::vector<GraphWithMetadata> generate_mesh_graph_manual_batch(const int N, const int batch_size) {
+/**
+ * @brief 批量生成网格图
+ * @param N 生成图的数量
+ * @param batch_size 每个网格图的大小（batch_size x batch_size）
+ * @return 生成的网格图向量
+ */
+std::vector<GraphWithMetadata>
+generate_mesh_graph_manual_batch(const int N, const int batch_size) {
   auto graph_indices = std::views::iota(0, N);
-  
-  return graph_indices 
-    | std::views::transform([N, batch_size](int) { return generate_mesh_graph_manual(batch_size); })
-    | std::ranges::to<std::vector>();
 
-    // std::vector<Graph> graphs(N);
-    // std::generate(graphs.begin(), graphs.end(), 
-    //     [batch_size]() {
-    //         return generate_mesh_graph_manual(batch_size);
-    //     }
-    // );
+  return graph_indices | std::views::transform([N, batch_size](int) {
+           return generate_mesh_graph_manual(batch_size);
+         }) |
+         std::ranges::to<std::vector>();
 
-    // return graphs;
+  // std::vector<Graph> graphs(N);
+  // std::generate(graphs.begin(), graphs.end(),
+  //     [batch_size]() {
+  //         return generate_mesh_graph_manual(batch_size);
+  //     }
+  // );
+
+  // return graphs;
 }

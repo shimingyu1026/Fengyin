@@ -1,24 +1,37 @@
+/**
+ * @file mesh_data.h
+ * @brief 带元数据的图数据结构定义
+ *
+ * 提供图的元数据管理、惰性计算、节点和边的操作接口
+ */
+
 #pragma once
 
 #include "common.h"
 #include <optional>
 
-
-// --- 图的元数据结构 ---
+/**
+ * @brief 图的元数据结构
+ *
+ * 存储图的各种元数据属性，使用 optional 实现惰性计算
+ */
 struct GraphMetadata {
-  std::optional<bool> has_subgraphs; // 是否有子图
-  std::optional<bool> is_full;       // 是否完整
-  std::optional<int> num_components; // 连通分量数量
-  std::optional<int> score;          // 图的分数
+  std::optional<bool> has_subgraphs;      // 是否有子图
+  std::optional<bool> is_full;            // 是否完整
+  std::optional<int> num_components;      // 连通分量数量
+  std::optional<int> score;               // 图的分数
   std::optional<bool> is_all_nodes_exist; // 是否所有节点都存在
 };
 
-// --- 带元数据的图包装类 ---
+/**
+ * @brief 带元数据的图包装类
+ *
+ * 封装 Boost Graph，提供元数据管理和惰性计算功能
+ */
 class GraphWithMetadata {
 private:
   Graph graph_;
   size_t graph_size_;
-
 
   mutable GraphMetadata metadata_;
   mutable bool metadata_dirty_ = true; // 全局脏标记
@@ -39,11 +52,11 @@ private:
 public:
   // 构造和移动
   GraphWithMetadata() = default;
-  explicit GraphWithMetadata(Graph g) : graph_(std::move(g)){
+  explicit GraphWithMetadata(Graph g) : graph_(std::move(g)) {
     graph_size_ = static_cast<size_t>(std::sqrt(boost::num_vertices(g)));
   }
 
-  //访问原始图
+  // 访问原始图
   size_t graph_size() const { return graph_size_; }
 
   // 访问原始图（只读）
@@ -71,6 +84,5 @@ public:
   void delete_isolated_nodes();
 
   void remove_random_edges(const int edge_num);
-
-
+  void remove_random_nodes(const int node_num);
 };

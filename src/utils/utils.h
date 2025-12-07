@@ -1,3 +1,10 @@
+/**
+ * @file utils.h
+ * @brief 工具函数定义
+ *
+ * 提供矩阵转置等通用工具函数
+ */
+
 #pragma once
 
 #include <cassert>
@@ -14,6 +21,13 @@
 #include <string>
 #include <vector>
 
+/**
+ * @brief 矩阵转置
+ * @tparam T 矩阵元素类型
+ * @param matrix 要转置的矩阵
+ * @return 转置后的矩阵
+ * @throws std::runtime_error 如果矩阵不是矩形（行长度不一致）
+ */
 template <typename T>
 std::vector<std::vector<T>>
 matrix_transpose(const std::vector<std::vector<T>> &matrix) {
@@ -52,6 +66,13 @@ matrix_transpose(const std::vector<std::vector<T>> &matrix) {
   return result;
 }
 
+/**
+ * @brief 非方阵转置（专门优化非方阵情况）
+ * @tparam T 矩阵元素类型
+ * @param matrix 要转置的矩阵
+ * @return 转置后的矩阵
+ * @throws std::runtime_error 如果矩阵不是矩形（行长度不一致）
+ */
 template <typename T>
 std::vector<std::vector<T>>
 matrix_transpose_non_square(const std::vector<std::vector<T>> &matrix) {

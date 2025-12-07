@@ -1,14 +1,26 @@
+/**
+ * @file mesh_data.cpp
+ * @brief 带元数据的图数据结构实现
+ *
+ * 实现图的元数据管理、惰性计算、节点和边的删除操作
+ */
+
 #include "mesh_data.h"
 #include "error_inject.h"
 #include "mesh_utils.h"
 
-// 清除所有缓存
+/**
+ * @brief 清除所有缓存
+ *
+ * 将所有元数据标记为未计算状态，并设置脏标记
+ */
 void GraphWithMetadata::invalidate_metadata() const {
   metadata_dirty_ = true;
   metadata_.has_subgraphs.reset();
   metadata_.is_full.reset();
   metadata_.num_components.reset();
   metadata_.score.reset();
+  metadata_.is_all_nodes_exist.reset();
 }
 
 // 检查并清除脏标记（当所有属性都已计算时）
@@ -20,7 +32,11 @@ void GraphWithMetadata::check_and_clear_dirty() const {
   }
 }
 
-// 惰性计算：是否有子图
+/**
+ * @brief 惰性计算：是否有子图
+ *
+ * 通过计算连通分量数量来判断是否存在子图（连通分量数量大于1）
+ */
 void GraphWithMetadata::ensure_has_subgraphs() const {
   if (metadata_.has_subgraphs.has_value()) {
     return;
@@ -87,7 +103,11 @@ void GraphWithMetadata::ensure_has_subgraphs() const {
   check_and_clear_dirty();
 }
 
-// 惰性计算：是否完整
+/**
+ * @brief 惰性计算：是否完整
+ *
+ * 通过比较当前分数与完整图的分数来判断图是否完整
+ */
 void GraphWithMetadata::ensure_is_full() const {
   if (metadata_.is_full.has_value()) {
     return;
@@ -172,7 +192,11 @@ void GraphWithMetadata::ensure_num_components() const {
   check_and_clear_dirty();
 }
 
-// 惰性计算：图的分数
+/**
+ * @brief 惰性计算：图的分数
+ *
+ * 计算图的分数：边数 * 1 + 节点数 * 3
+ */
 void GraphWithMetadata::ensure_score() const {
   if (metadata_.score.has_value()) {
     return;
@@ -187,6 +211,11 @@ void GraphWithMetadata::ensure_score() const {
   check_and_clear_dirty();
 }
 
+/**
+ * @brief 惰性计算：是否所有节点都存在
+ *
+ * 检查图中是否所有节点都未被删除
+ */
 void GraphWithMetadata::ensure_is_all_nodes_exist() const {
   if (metadata_.is_all_nodes_exist.has_value()) {
     return;
@@ -210,7 +239,10 @@ bool GraphWithMetadata::has_subgraphs() const {
   return metadata_.has_subgraphs.value();
 }
 
-// 公共接口：获取是否完整
+/**
+ * @brief 获取是否完整
+ * @return 如果图完整返回 true，否则返回 false
+ */
 bool GraphWithMetadata::is_full() const {
   ensure_is_full();
   return metadata_.is_full.value();
@@ -222,7 +254,10 @@ int GraphWithMetadata::num_components() const {
   return metadata_.num_components.value();
 }
 
-// 公共接口：获取图的分数
+/**
+ * @brief 获取图的分数
+ * @return 图的分数（边数 * 1 + 节点数 * 3）
+ */
 int GraphWithMetadata::score() const {
   ensure_score();
   return metadata_.score.value();
@@ -234,7 +269,10 @@ bool GraphWithMetadata::is_all_nodes_exist() const {
   return metadata_.is_all_nodes_exist.value();
 }
 
-// 公共接口：获取图的拓扑结构
+/**
+ * @brief 获取图的拓扑结构
+ * @return 图的拓扑结构字符串表示
+ */
 std::string GraphWithMetadata::get_graph_topology() const {
   std::string topology;
   size_t node_num = graph_size_ * graph_size_;
@@ -286,7 +324,13 @@ void GraphWithMetadata::delete_node(int node_idx) {
   invalidate_metadata();
 }
 
-// 修改接口：删除边
+/**
+ * @brief 删除边
+ * @param source_idx 源节点索引
+ * @param target_idx 目标节点索引
+ *
+ * 删除指定的边，并失效元数据缓存
+ */
 void GraphWithMetadata::delete_edge(int source_idx, int target_idx) {
   // 检查节点索引是否有效
   int num_vertices = static_cast<int>(boost::num_vertices(graph_));
@@ -334,7 +378,12 @@ void GraphWithMetadata::delete_isolated_nodes() {
   }
 }
 
-// 修改接口：删除随机边
+/**
+ * @brief 删除随机边
+ * @param edge_num 要删除的边数量
+ *
+ * 随机选择并删除指定数量的有效边（连接未删除节点的边）
+ */
 void GraphWithMetadata::remove_random_edges(const int edge_num) {
   if (edge_num <= 0) {
     return; // 无效参数，直接返回
@@ -378,4 +427,48 @@ void GraphWithMetadata::remove_random_edges(const int edge_num) {
   }
 
   // 注意：delete_edge 已经会调用 invalidate_metadata()，所以这里不需要再次调用
+}
+
+/**
+ * @brief 删除随机节点
+ * @param node_num 要删除的节点数量
+ *
+ * 随机选择并删除指定数量的未删除节点
+ */
+void GraphWithMetadata::remove_random_nodes(const int node_num) {
+  if (node_num <= 0) {
+    return; // 无效参数，直接返回
+  }
+
+  // 创建随机数生成器
+  std::random_device rd;
+  std::mt19937 rng(rd());
+
+  // 收集所有未删除的节点
+  std::vector<int> valid_nodes;
+  int num_vertices = static_cast<int>(boost::num_vertices(graph_));
+  for (int i = 0; i < num_vertices; ++i) {
+    auto vertex = boost::vertex(i, graph_);
+    if (!graph_[vertex].is_deleted) {
+      valid_nodes.push_back(i);
+    }
+  }
+
+  // 如果有效节点数少于要删除的数量，只删除所有有效节点
+  int num_to_remove = std::min(node_num, static_cast<int>(valid_nodes.size()));
+  if (num_to_remove == 0) {
+    return; // 没有有效节点可删除
+  }
+
+  // 随机选择要删除的节点
+  std::vector<int> nodes_to_remove;
+  std::ranges::sample(valid_nodes, std::back_inserter(nodes_to_remove),
+                      num_to_remove, rng);
+
+  // 删除选中的节点
+  for (int node_idx : nodes_to_remove) {
+    delete_node(node_idx);
+  }
+
+  // 注意：delete_node 已经会调用 invalidate_metadata()，所以这里不需要再次调用
 }
